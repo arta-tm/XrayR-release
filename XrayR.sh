@@ -8,7 +8,7 @@ plain='\033[0m'
 version="v1.0.0"
 
 # check root
-[[ $EUID -ne 0 ]] && echo -e "${red}错误: ${plain} 必须使用root用户运行此脚本！\n" && exit 1
+[[ $EUID -ne 0 ]] && echo -e "${red}Error: ${plain} You must be root to run this script! \n" && exit 1
 
 # check os
 if [[ -f /etc/redhat-release ]]; then
@@ -26,7 +26,7 @@ elif cat /proc/version | grep -Eqi "ubuntu"; then
 elif cat /proc/version | grep -Eqi "centos|red hat|redhat"; then
     release="centos"
 else
-    echo -e "${red}未检测到系统版本，请联系脚本作者！${plain}\n" && exit 1
+    echo -e "${red} has not detected the system version, please contact the script author! ${plain}\n" && exit 1
 fi
 
 os_version=""
@@ -41,21 +41,21 @@ fi
 
 if [[ x"${release}" == x"centos" ]]; then
     if [[ ${os_version} -le 6 ]]; then
-        echo -e "${red}请使用 CentOS 7 或更高版本的系统！${plain}\n" && exit 1
+        echo -e "${red}Please use CentOS 7 or later! ${plain}\n" && exit 1
     fi
 elif [[ x"${release}" == x"ubuntu" ]]; then
     if [[ ${os_version} -lt 16 ]]; then
-        echo -e "${red}请使用 Ubuntu 16 或更高版本的系统！${plain}\n" && exit 1
+        echo -e "${red}Please use Ubuntu 16 or later! ${plain}\n" && exit 1
     fi
 elif [[ x"${release}" == x"debian" ]]; then
     if [[ ${os_version} -lt 8 ]]; then
-        echo -e "${red}请使用 Debian 8 或更高版本的系统！${plain}\n" && exit 1
+        echo -e "${red}Please use Debian 8 or higher! ${plain}\n" && exit 1
     fi
 fi
 
 confirm() {
     if [[ $# > 1 ]]; then
-        echo && read -p "$1 [默认$2]: " temp
+        echo && read -p "$1 [default$2]: " temp
         if [[ x"${temp}" == x"" ]]; then
             temp=$2
         fi
@@ -70,7 +70,7 @@ confirm() {
 }
 
 confirm_restart() {
-    confirm "是否重启XrayR" "y"
+    confirm "Whether to restart XrayR" "y"
     if [[ $? == 0 ]]; then
         restart
     else
@@ -79,7 +79,7 @@ confirm_restart() {
 }
 
 before_show_menu() {
-    echo && echo -n -e "${yellow}按回车返回主菜单: ${plain}" && read temp
+    echo && echo -n -e "${yellow} Press Enter to return to the main menu: ${plain}" && read temp
     show_menu
 }
 
@@ -96,11 +96,11 @@ install() {
 
 update() {
     if [[ $# == 0 ]]; then
-        echo && echo -n -e "输入指定版本(默认最新版): " && read version
+        echo && echo -n -e "Enter the specified version (default latest version): " && read version
     else
         version=$2
     fi
-#    confirm "本功能会强制重装当前最新版，数据不会丢失，是否继续?" "n"
+#    confirm "This function will forcefully reinstall the latest version, and the data will not be lost. Do you want to continue?" "n"
 #    if [[ $? != 0 ]]; then
 #        echo -e "${red}已取消${plain}"
 #        if [[ $1 != 0 ]]; then
@@ -110,7 +110,7 @@ update() {
 #    fi
     bash <(curl -Ls https://raw.githubusercontent.com/XrayR-project/XrayR-release/master/install.sh) $version
     if [[ $? == 0 ]]; then
-        echo -e "${green}更新完成，已自动重启 XrayR，请使用 XrayR log 查看运行日志${plain}"
+        echo -e "${green} has been updated and XrayR has restarted automatically, please use XrayR log to view the running log ${plain}"
         exit
     fi
 
@@ -120,16 +120,16 @@ update() {
 }
 
 config() {
-    echo "XrayR在修改配置后会自动尝试重启"
+    echo "XrayR will automatically try to restart after modifying the configuration"
     vi /etc/XrayR/config.yml
     sleep 2
     check_status
     case $? in
         0)
-            echo -e "XrayR状态: ${green}已运行${plain}"
+            echo -e "XrayR status: ${green} running ${plain}"
             ;;
         1)
-            echo -e "检测到您未启动XrayR或XrayR自动重启失败，是否查看日志？[Y/n]" && echo
+            echo -e "It is detected that you have not started XrayR or that XrayR fails to restart automatically. Do you want to check the log? [Y/n]" && echo
             read -e -p "(默认: y):" yn
             [[ -z ${yn} ]] && yn="y"
             if [[ ${yn} == [Yy] ]]; then
@@ -137,12 +137,12 @@ config() {
             fi
             ;;
         2)
-            echo -e "XrayR状态: ${red}未安装${plain}"
+            echo -e "XrayR status: ${red} is not installed ${plain}"
     esac
 }
 
 uninstall() {
-    confirm "确定要卸载 XrayR 吗?" "n"
+    confirm "Are you sure you want to uninstall XrayR?" "n"
     if [[ $? != 0 ]]; then
         if [[ $# == 0 ]]; then
             show_menu
@@ -158,7 +158,7 @@ uninstall() {
     rm /usr/local/XrayR/ -rf
 
     echo ""
-    echo -e "卸载成功，如果你想删除此脚本，则退出脚本后运行 ${green}rm /usr/bin/XrayR -f${plain} 进行删除"
+    echo -e "The uninstallation is successful. If you want to delete this script, run ${green}rm /usr/bin/XrayR -f ${plain} after exiting the script to delete it"
     echo ""
 
     if [[ $# == 0 ]]; then
@@ -170,15 +170,15 @@ start() {
     check_status
     if [[ $? == 0 ]]; then
         echo ""
-        echo -e "${green}XrayR已运行，无需再次启动，如需重启请选择重启${plain}"
+        echo -e "${green}XrayR has been running, no need to start again, if you need to restart, please choose restart ${plain}"
     else
         systemctl start XrayR
         sleep 2
         check_status
         if [[ $? == 0 ]]; then
-            echo -e "${green}XrayR 启动成功，请使用 XrayR log 查看运行日志${plain}"
+            echo -e "${green}XrayR started successfully, please use XrayR log to view the running log ${plain}"
         else
-            echo -e "${red}XrayR可能启动失败，请稍后使用 XrayR log 查看日志信息${plain}"
+            echo -e "${red}XrayR may fail to start, please use XrayR log to view log information later ${plain}"
         fi
     fi
 
@@ -192,9 +192,9 @@ stop() {
     sleep 2
     check_status
     if [[ $? == 1 ]]; then
-        echo -e "${green}XrayR 停止成功${plain}"
+        echo -e "${green}XrayR stopped successfully ${plain}"
     else
-        echo -e "${red}XrayR停止失败，可能是因为停止时间超过了两秒，请稍后查看日志信息${plain}"
+        echo -e "${red}XrayR failed to stop, probably because the stop time exceeded two seconds, please check the log information later ${plain}"
     fi
 
     if [[ $# == 0 ]]; then
@@ -207,9 +207,9 @@ restart() {
     sleep 2
     check_status
     if [[ $? == 0 ]]; then
-        echo -e "${green}XrayR 重启成功，请使用 XrayR log 查看运行日志${plain}"
+        echo -e "${green}XrayR restarted successfully, please use XrayR log to view the running log ${plain}"
     else
-        echo -e "${red}XrayR可能启动失败，请稍后使用 XrayR log 查看日志信息${plain}"
+        echo -e "${red}XrayR may fail to start, please use XrayR log to view log information later ${plain}"
     fi
     if [[ $# == 0 ]]; then
         before_show_menu
@@ -226,9 +226,9 @@ status() {
 enable() {
     systemctl enable XrayR
     if [[ $? == 0 ]]; then
-        echo -e "${green}XrayR 设置开机自启成功${plain}"
+        echo -e "${green}XrayR is set to boot up successfully ${plain}"
     else
-        echo -e "${red}XrayR 设置开机自启失败${plain}"
+        echo -e "${red}XrayR failed to start automatically at boot ${plain}"
     fi
 
     if [[ $# == 0 ]]; then
@@ -239,9 +239,9 @@ enable() {
 disable() {
     systemctl disable XrayR
     if [[ $? == 0 ]]; then
-        echo -e "${green}XrayR 取消开机自启成功${plain}"
+        echo -e "${green}XrayR cancels booting successfully ${plain}"
     else
-        echo -e "${red}XrayR 取消开机自启失败${plain}"
+        echo -e "${red}XrayR failed to cancel booting automatically ${plain}"
     fi
 
     if [[ $# == 0 ]]; then
@@ -260,10 +260,10 @@ install_bbr() {
     bash <(curl -L -s https://raw.githubusercontent.com/chiakge/Linux-NetSpeed/master/tcp.sh)
     #if [[ $? == 0 ]]; then
     #    echo ""
-    #    echo -e "${green}安装 bbr 成功，请重启服务器${plain}"
+    #    echo -e "${green} installed bbr successfully, please restart the server ${plain}"
     #else
     #    echo ""
-    #    echo -e "${red}下载 bbr 安装脚本失败，请检查本机能否连接 Github${plain}"
+    #    echo -e "${red} failed to download the bbr installation script, please check whether the machine can connect to Github${plain}"
     #fi
 
     #before_show_menu
@@ -273,11 +273,11 @@ update_shell() {
     wget -O /usr/bin/XrayR -N --no-check-certificate https://raw.githubusercontent.com/XrayR-project/XrayR-release/master/XrayR.sh
     if [[ $? != 0 ]]; then
         echo ""
-        echo -e "${red}下载脚本失败，请检查本机能否连接 Github${plain}"
+        echo -e "${red} failed to download the script, please check whether the machine can connect to Github${plain}"
         before_show_menu
     else
         chmod +x /usr/bin/XrayR
-        echo -e "${green}升级脚本成功，请重新运行脚本${plain}" && exit 0
+        echo -e "${green} upgrade script is successful, please run the script again ${plain}" && exit 0
     fi
 }
 
@@ -307,7 +307,7 @@ check_uninstall() {
     check_status
     if [[ $? != 2 ]]; then
         echo ""
-        echo -e "${red}XrayR已安装，请不要重复安装${plain}"
+        echo -e "${red}XrayR has already been installed, please do not re-install ${plain}"
         if [[ $# == 0 ]]; then
             before_show_menu
         fi
@@ -321,7 +321,7 @@ check_install() {
     check_status
     if [[ $? == 2 ]]; then
         echo ""
-        echo -e "${red}请先安装XrayR${plain}"
+        echo -e "${red}Please install XrayR first ${plain}"
         if [[ $# == 0 ]]; then
             before_show_menu
         fi
@@ -335,24 +335,24 @@ show_status() {
     check_status
     case $? in
         0)
-            echo -e "XrayR状态: ${green}已运行${plain}"
+            echo -e "XrayR status: ${green} running ${plain}"
             show_enable_status
             ;;
         1)
-            echo -e "XrayR状态: ${yellow}未运行${plain}"
+            echo -e "XrayR status: ${yellow} is not running ${plain}"
             show_enable_status
             ;;
         2)
-            echo -e "XrayR状态: ${red}未安装${plain}"
+            echo -e "XrayR status: ${red} is not installed ${plain}"
     esac
 }
 
 show_enable_status() {
     check_enabled
     if [[ $? == 0 ]]; then
-        echo -e "是否开机自启: ${green}是${plain}"
+        echo -e "Whether to boot automatically: ${green} is ${plain}"
     else
-        echo -e "是否开机自启: ${red}否${plain}"
+        echo -e "Whether to start automatically at boot: ${red}No ${plain}"
     fi
 }
 
@@ -368,48 +368,48 @@ show_XrayR_version() {
 show_usage() {
     echo "XrayR 管理脚本使用方法: "
     echo "------------------------------------------"
-    echo "XrayR              - 显示管理菜单 (功能更多)"
-    echo "XrayR start        - 启动 XrayR"
-    echo "XrayR stop         - 停止 XrayR"
-    echo "XrayR restart      - 重启 XrayR"
-    echo "XrayR status       - 查看 XrayR 状态"
-    echo "XrayR enable       - 设置 XrayR 开机自启"
-    echo "XrayR disable      - 取消 XrayR 开机自启"
-    echo "XrayR log          - 查看 XrayR 日志"
-    echo "XrayR update       - 更新 XrayR"
-    echo "XrayR update x.x.x - 更新 XrayR 指定版本"
-    echo "XrayR install      - 安装 XrayR"
-    echo "XrayR uninstall    - 卸载 XrayR"
-    echo "XrayR version      - 查看 XrayR 版本"
+    echo "XrayR              - Show admin menu (more features)"
+    echo "XrayR start        - Start XrayR"
+    echo "XrayR stop         - Stop XrayR"
+    echo "XrayR restart      - Restart XrayR"
+    echo "XrayR status       - View XrayR status"
+    echo "XrayR enable       - Set XrayR to start automatically at boot"
+    echo "XrayR disable      - Cancel XrayR autostart"
+    echo "XrayR log          - View XrayR logs"
+    echo "XrayR update       - Update XrayR"
+    echo "XrayR update x.x.x - Update the specified version of XrayR"
+    echo "XrayR install      - Install XrayR"
+    echo "XrayR uninstall    - Uninstall XrayR"
+    echo "XrayR version      - View XrayR version"
     echo "------------------------------------------"
 }
 
 show_menu() {
     echo -e "
-  ${green}XrayR 后端管理脚本，${plain}${red}不适用于docker${plain}
+  ${green}XrayR backend management script, ${plain}${red} does not work with docker ${plain}
 --- https://github.com/XrayR-project/XrayR ---
-  ${green}0.${plain} 修改配置
+  ${green}0.${plain} Change setting
 ————————————————
-  ${green}1.${plain} 安装 XrayR
-  ${green}2.${plain} 更新 XrayR
-  ${green}3.${plain} 卸载 XrayR
+  ${green}1.${plain} Install XrayR
+  ${green}2.${plain} renew XrayR
+  ${green}3.${plain} uninstall XrayR
 ————————————————
-  ${green}4.${plain} 启动 XrayR
-  ${green}5.${plain} 停止 XrayR
-  ${green}6.${plain} 重启 XrayR
-  ${green}7.${plain} 查看 XrayR 状态
-  ${green}8.${plain} 查看 XrayR 日志
+  ${green}4.${plain} start up XrayR
+  ${green}5.${plain} stop XrayR
+  ${green}6.${plain} reboot XrayR
+  ${green}7.${plain} View XrayR status
+  ${green}8.${plain} View XrayR logs
 ————————————————
-  ${green}9.${plain} 设置 XrayR 开机自启
- ${green}10.${plain} 取消 XrayR 开机自启
+  ${green}9.${plain} Set XrayR to start automatically at boot
+ ${green}10.${plain} Cancel XrayR autostart
 ————————————————
- ${green}11.${plain} 一键安装 bbr (最新内核)
- ${green}12.${plain} 查看 XrayR 版本 
- ${green}13.${plain} 升级维护脚本
+ ${green}11.${plain} 一One-click install bbr (latest kernel)
+ ${green}12.${plain} View XrayR version
+ ${green}13.${plain} Upgrade maintenance script
  "
- #后续更新可加入上方字符串中
+ # Subsequent updates can be added to the above string
     show_status
-    echo && read -p "请输入选择 [0-13]: " num
+    echo && read -p "Please enter selection [0-13]: " num
 
     case "${num}" in
         0) config
@@ -440,7 +440,7 @@ show_menu() {
         ;;
         13) update_shell
         ;;
-        *) echo -e "${red}请输入正确的数字 [0-12]${plain}"
+        *) echo -e "${red}Please enter the correct number [0-12]${plain}"
         ;;
     esac
 }
